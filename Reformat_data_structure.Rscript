@@ -1,0 +1,25 @@
+#
+#By Dr Clementine Merce
+
+install.packages("tidyr")
+install.packages("stringr")
+library(tidyr)
+library(stringr)
+
+data <- read.csv("Raw_genotyping_calls_edited2.csv", header=T)
+
+#merge isolate+lobe values (D2_1, D2_2, etc)
+data$merged <- paste(data$Isolate, data$Lobe, sep="_")
+
+#add batch value tu plant name in case of duplicated lines
+data[duplicated(data[,c(2,4,8,11)]),]$Plant <- paste(data[duplicated(data[,c(2,4,8,11)]),]$Plant, "Batch", data[duplicated(data[,c(2,4,8,11)]),]$Batch ,sep=".")
+
+subdata <- data[,c(2,4,8,10,11)]
+#from lines to columns
+res <- spread(subdata, merged, Score)
+
+#sort the merged columns (D2_1, D2_2, etc)
+sorted <- str_sort(colnames(res)[4:79], numeric = TRUE)
+formated_result <- res[, c("Year", "MGP.code", "Plant", sorted)]
+
+write.table(formated_result, "results_v2.csv", sep=",", row.names = FALSE, quote=FALSE)
